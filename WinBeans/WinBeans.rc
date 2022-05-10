@@ -1,0 +1,117 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open\tCTRL+O",               ID_FILE_OPEN
+        MENUITEM "&Unload Selected\tCTRL+W",    ID_FILE_UNLOADSELECTION
+        MENUITEM "&Unload All\t CTRL+SHIFT+W",  ID_FILE_UNLOADALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Quit\tCTRL+Q",               ID_FILE_QUIT
+    END
+    POPUP "&About"
+    BEGIN
+        MENUITEM "&Product",                    ID_ABOUT_PRODUCT
+        MENUITEM "&Manufacturer",               ID_ABOUT_MANUFACTURER
+        MENUITEM "&License",                    ID_ABOUT_LICENSE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// PNG
+//
+
+IDB_BEAN_PNG            PNG                     "Assets\\bean.png"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ID_CTRL_ACCEL ACCELERATORS
+BEGIN
+    "O",            ID_CTRL_O,              VIRTKEY, CONTROL, NOINVERT
+    "Q",            ID_CTRL_Q,              VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_CTRL_W,              VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_CTRL_SHIFT_W,        VIRTKEY, SHIFT, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_BEAN_ICO            ICON                    "Assets\\bean.ico"
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
