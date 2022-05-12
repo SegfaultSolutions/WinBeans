@@ -82,10 +82,11 @@ LaunchGUI (HINSTANCE hInstance) {
 		LogMeA (FAIL, "Theme not applied to listview.");
 	}
 	
-	// Handle at least the resizing for the progress bar -> look at LoaderProc (...)
+	// Handle some custom drawing (e.g. look at LoaderProc)
 	if (!SetWindowSubclass (subWndRight, rightProc, SUB_RIGHT, NULL)) {
 		LogMeA (WARN, "Right subclass not registered");
 	}
+
 	ListView_SetExtendedListViewStyle (subWndRight, LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP |
 									   LVS_EX_DOUBLEBUFFER | LVS_EX_HEADERINALLVIEWS);
 
@@ -454,6 +455,7 @@ rightProc (HWND subWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR subClas
 	switch (msg) {
 
 	case WM_SIZE:
+	{
 		// Update the peogress bar if there is one
 		if (progBar) {
 			// There's probably a better way of doing this performance wise
@@ -463,6 +465,17 @@ rightProc (HWND subWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR subClas
 		}
 		break;
 	}
+
+	case WM_PAINT:
+	{
+		// Maybe GDI+ isn't the answer and if so remember to remove it from stdafx and the input libs
+		break;
+	}
+
+	default:
+		return DefSubclassProc (subWnd, msg, wParam, lParam);
+	}
+
 	return DefSubclassProc (subWnd, msg, wParam, lParam);
 }
 
@@ -495,4 +508,3 @@ enumChildProc (HWND subWnd, LPARAM lParam) {
 	else
 		return retval;
 }
-
