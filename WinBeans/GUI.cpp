@@ -61,6 +61,11 @@ LaunchGUI (HINSTANCE hInstance) {
 		LogMeA (WARN, "Theme not applied to treeview.");
 	}
 
+	// Handle some custom drawing (e.g. look at LoaderProc)
+	if (!SetWindowSubclass (subWndLeft, leftProc, SUB_LEFT, NULL)) {
+		LogMeA (WARN, "Left subclass not registered");
+	}
+
 	ListView_SetExtendedListViewStyle (subWndLeft, TVS_EX_DOUBLEBUFFER | TVS_EX_FADEINOUTEXPANDOS);
 
 	// Create right side subview as a list view for data display
@@ -368,9 +373,11 @@ rootProc (HWND rootWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	case WM_SIZE: 
 	{
-		// Update subviews
-		if (GetClientRect (rootWnd, &rootRect))
-			return EnumChildWindows (rootWnd, enumChildProc, (LPARAM)&rootRect);
+		// Record current size of root window and propagate changes to children
+		GetClientRect (rootWnd, &rootRect);
+		SendMessageW (subWndLeft, uMsg, wParam, lParam);
+		SendMessageW (subWndRight, uMsg, wParam, lParam);
+		break;
 	}
 
 	case WM_DROPFILES:
@@ -380,7 +387,7 @@ rootProc (HWND rootWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		nDrops = DragQueryFileW ((HDROP)wParam, 0xFFFFFFFF, NULL, NULL);
 		std::thread loaderThread (LoaderProc, wParam, nDrops);
 
-		// If for some reason the user decides to loader thousands of binaries at once
+		// If for some reason the user decides to load thousands of binaries at once
 		// this will make it so that the rest of the application isn't stuck waiting
 		loaderThread.detach ();
 		
@@ -389,44 +396,15 @@ rootProc (HWND rootWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 	case WM_NOTIFY:
 	{
-		if (((LPNMHDR)lParam)->idFrom != SUB_LEFT) {
-			break;
+		// Forward the message to the correct window procedure for processing
+		if (((LPNMHDR)lParam)->idFrom == SUB_LEFT) {
+			SendMessageW (subWndLeft, uMsg, wParam, lParam);
 		}
-		
-		switch (((LPNMHDR)lParam)->code) {
-
-		case TVN_SELCHANGED:
-		{
-			HTREEITEM selectedItem;
-			TVITEMW item{};
-			uint32_t i, id;
-		
-			if (deleting) {
-				break;
-			}
-
-			selectedItem = TreeView_GetSelection (subWndLeft);
-			
-			if (!selectedItem)
-				break;
-			
-			if (firstSel) {
-				MakeListViewCols (subWndRight);
-				firstSel = false;
-			}
-	
-			item.hItem = selectedItem;
-			item.mask = TVIF_PARAM;
-
-			TreeView_GetItem (subWndLeft, &item);
-	
-			i = HIDWORD (item.lParam);
-			id = LODWORD (item.lParam);
-	
-			ListView_DeleteAllItems (subWndRight);
-			BinList[i]->PopulateList (subWndRight, id);
-			break;
+		else if (((LPNMHDR)lParam)->idFrom == SUB_RIGHT) {
+			SendMessageW (subWndRight, uMsg, wParam, lParam);
 		}
+		else {
+			return DefWindowProcW (rootWnd, uMsg, wParam, lParam);
 		}
 		break;
 	}
@@ -450,13 +428,81 @@ rootProc (HWND rootWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT
+leftProc (HWND subWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR subClassID, DWORD_PTR refData) {
+
+	switch (msg) {
+
+	case WM_SIZE:
+	{
+		MoveWindow (subWnd, MS, MS,
+					TW, rootRect.bottom - (MS * 2),
+					true);
+		GetClientRect (subWnd, &leftRect);
+		break;
+	}
+
+	case WM_NOTIFY:
+	{
+		switch (((LPNMHDR)lParam)->code) {
+	
+		case TVN_SELCHANGED:
+		{
+			HTREEITEM selectedItem;
+			TVITEMW item{};
+			uint32_t i, id;
+
+			if (deleting) {
+				break;
+			}
+
+			selectedItem = TreeView_GetSelection (subWndLeft);
+
+			if (!selectedItem)
+				break;
+
+			if (firstSel) {
+				MakeListViewCols (subWndRight);
+				firstSel = false;
+			}
+
+			item.hItem = selectedItem;
+			item.mask = TVIF_PARAM;
+
+			TreeView_GetItem (subWndLeft, &item);
+
+			i = HIDWORD (item.lParam);
+			id = LODWORD (item.lParam);
+
+			ListView_DeleteAllItems (subWndRight);
+			BinList[i]->PopulateList (subWndRight, id);
+			break;
+		}
+
+		default:
+			return DefSubclassProc (subWnd, msg, wParam, lParam);
+		}
+	}
+	default:
+		return DefSubclassProc (subWnd, msg, wParam, lParam);
+	}
+
+	return DefSubclassProc (subWnd, msg, wParam, lParam);
+}
+
+LRESULT
 rightProc (HWND subWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR subClassID, DWORD_PTR refData) {
 
 	switch (msg) {
 
 	case WM_SIZE:
 	{
-		// Update the peogress bar if there is one
+		MoveWindow (subWnd, TW + (MS * 2), MS,
+					rootRect.right - (TW + (MS * 3)),
+					rootRect.bottom - (MS * 2),
+					true);
+		GetClientRect (subWnd, &rightRect);
+
+		// Update the progress bar if there is one
 		if (progBar) {
 			// There's probably a better way of doing this performance wise
 			GetClientRect (subWnd, &rightRect);
@@ -472,39 +518,10 @@ rightProc (HWND subWnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR subClas
 		break;
 	}
 
+
 	default:
 		return DefSubclassProc (subWnd, msg, wParam, lParam);
 	}
 
 	return DefSubclassProc (subWnd, msg, wParam, lParam);
-}
-
-BOOL
-enumChildProc (HWND subWnd, LPARAM lParam) {
-
-	int32_t subID;
-	BOOL retval = false;
-	LPRECT root = (LPRECT)lParam;
-
-	subID = GetWindowLongW (subWnd, GWL_ID);
-	
-	if (subID == SUB_LEFT) {
-
-		retval = MoveWindow (subWnd, MS, MS,
-							 TW, root->bottom - (MS * 2),
-							 true);
-		GetClientRect (subWnd, &leftRect);
-		return retval;
-	}
-	else if (subID == SUB_RIGHT) {
-
-		retval = MoveWindow (subWnd, TW + (MS * 2), MS,
-							 root->right - (TW + (MS * 3)),
-							 root->bottom - (MS * 2),
-							 true);
-		GetClientRect (subWnd, &rightRect);
-		return retval;
-	}
-	else
-		return retval;
 }
