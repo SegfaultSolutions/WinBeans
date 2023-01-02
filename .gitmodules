@@ -1,0 +1,3 @@
+[submodule "BeanLog"]
+	path = BeanLog
+	url = https://github.com/Segfault-Solutions/BeanLog.git
