@@ -32,7 +32,7 @@ LaunchGUI(HINSTANCE hInstance)
 		return;
 	}
 
-	rootWnd = CreateWindowExW(0, wcRoot.lpszClassName, L"WinBeans", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+	rootWnd = CreateWindowExW(WS_EX_WINDOWEDGE, wcRoot.lpszClassName, L"WinBeans", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 							  CW_USEDEFAULT, CW_USEDEFAULT, DEF_WIDTH, DEF_HEIGHT,
 							  HWND_DESKTOP, NULL, hInstance, NULL);
 
